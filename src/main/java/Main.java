@@ -10,7 +10,7 @@ public class Main {
         SimpleDeviceGroup mode2 = new SimpleDeviceGroup(1, 6,2);
         SimpleDeviceGroup mode3 = new SimpleDeviceGroup(1, 13,3);
         SimpleDeviceGroup mode4 = new SimpleDeviceGroup(1, 14,4);
-        SimpleDeviceGroup mode5 = new SimpleDeviceGroup(1, 14,5);
+        SimpleDeviceGroup mode5 = new SimpleDeviceGroup(1, 20,5);
 
         logicDeviceGroup.addGroup("mode1",mode1);
         logicDeviceGroup.addGroup("mode2",mode2);
