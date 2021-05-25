@@ -13,7 +13,6 @@ public class SerialPortParam implements SerialPortWrapper {
     private int stopBits = 1;
     private int parity = 0;
     private final SerialPort serialPort;
-    private Serial serial;
 
 
     public void setBaudRate(int baudRate) {
@@ -33,13 +32,10 @@ public class SerialPortParam implements SerialPortWrapper {
     }
 
 
-    public SerialPortParam(Serial serial) {
-        this.serial = serial;
-        serialPort = SerialPort.getCommPort(serial.getName());
-        serialPort.setNumDataBits(serial.getDataBits());
-        serialPort.setNumStopBits(serial.getStopBits());
-        serialPort.setParity(serial.getParity());
-        serialPort.setBaudRate(serial.getBaudRate());
+    public SerialPortParam() {
+        serialPort = SerialPort.getCommPort("/dev/ttyUSB2");
+        serialPort.setParity(SerialPort.EVEN_PARITY);
+        System.err.println(serialPort);
         serialPort.openPort();
     }
 
@@ -52,12 +48,6 @@ public class SerialPortParam implements SerialPortWrapper {
 
     @Override
     public void open() throws Exception {
-        if (serial != null){
-            serialPort.setNumDataBits(serial.getDataBits());
-            serialPort.setNumStopBits(serial.getStopBits());
-            serialPort.setParity(serial.getParity());
-            serialPort.setBaudRate(serial.getBaudRate());
-        }
         serialPort.openPort();
     }
 

@@ -2,6 +2,7 @@ package modbus;
 
 import com.serotonin.modbus4j.ModbusFactory;
 import com.serotonin.modbus4j.ModbusMaster;
+import com.serotonin.modbus4j.exception.ModbusInitException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.msg.ReadHoldingRegistersRequest;
 import com.serotonin.modbus4j.msg.ReadHoldingRegistersResponse;
@@ -14,7 +15,13 @@ public enum ModbusMasterHolder {
 
     ModbusMasterHolder() {
         Serial serial = new Serial();
-        modbusMaster = new ModbusFactory().createRtuMaster(new SerialPortParam(serial));
+        modbusMaster = new ModbusFactory().createRtuMaster(new SerialPortParam());
+        try {
+            modbusMaster.init();
+            modbusMaster.setTimeout(5000);
+        } catch (ModbusInitException e) {
+            e.printStackTrace();
+        }
     }
 
     ModbusMaster modbusMaster;

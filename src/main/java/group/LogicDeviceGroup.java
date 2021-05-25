@@ -1,5 +1,6 @@
 package group;
 
+import com.serotonin.modbus4j.exception.ErrorResponseException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.msg.WriteRegisterResponse;
 import entiry.Device;
@@ -56,15 +57,7 @@ public class LogicDeviceGroup implements DeviceGroup {
         LogicDeviceGroup lnb = new LogicDeviceGroup();
         logicDeviceGroup.setName("欧诗漫VRV空调集群");
         // 集群1 30台空调
-        logicDeviceGroup.addGroup("集群1", new SimpleDeviceGroup(0, 30));
-        // 集群2 20台空调
-        logicDeviceGroup.addGroup("集群2", new SimpleDeviceGroup(1, 20));
-        // 集群3 10台空调
-        logicDeviceGroup.addGroup("集群3", new SimpleDeviceGroup(2, 10));
-        // 集群4 10台空调
-        logicDeviceGroup.addGroup("集群4", new SimpleDeviceGroup(3, 10));
-
-
+        logicDeviceGroup.addGroup("集群1", new SimpleDeviceGroup(2, 30));
 
         lnb.setName("萧山测试");
         lnb.addGroup(logicDeviceGroup.getName(), logicDeviceGroup);
@@ -74,6 +67,13 @@ public class LogicDeviceGroup implements DeviceGroup {
 
     @Override
     public WriteRegisterResponse setRunState(Short state) {
+        deviceGroupConcurrentHashMap.forEach((s, deviceGroup) -> {
+            try {
+                deviceGroup.setRunState(state);
+            } catch (ModbusTransportException e) {
+                e.printStackTrace();
+            }
+        });
         return null;
     }
 
@@ -91,11 +91,25 @@ public class LogicDeviceGroup implements DeviceGroup {
 
     @Override
     public WriteRegisterResponse setModeSetting(Short mode) {
+        deviceGroupConcurrentHashMap.forEach((s, deviceGroup) -> {
+            try {
+                deviceGroup.setModeSetting(mode);
+            } catch (ModbusTransportException e) {
+                e.printStackTrace();
+            }
+        });
         return null;
     }
 
     @Override
     public WriteRegisterResponse setWindDirectionSetting(Short wds) {
+        deviceGroupConcurrentHashMap.forEach((s, deviceGroup) -> {
+            try {
+                deviceGroup.setWindDirectionSetting(wds);
+            } catch (ModbusTransportException e) {
+                e.printStackTrace();
+            }
+        });
         return null;
     }
 
@@ -111,6 +125,11 @@ public class LogicDeviceGroup implements DeviceGroup {
 
     @Override
     public List<Device> getDeviceVo() {
+        return null;
+    }
+
+    @Override
+    public List<Device> getDeviceVo2() throws ModbusTransportException, ErrorResponseException {
         return null;
     }
 }

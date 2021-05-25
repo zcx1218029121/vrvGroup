@@ -67,6 +67,17 @@ public class Device {
         return windDirectionSetting;
     }
 
+    @Override
+    public String toString() {
+        return "Device{" +
+                "runState=" + runState +
+                ", tempSetting=" + tempSetting +
+                ", modeSetting=" + modeSetting +
+                ", windDirectionSetting=" + windDirectionSetting +
+                ", err=" + err +
+                '}';
+    }
+
     public void setWindDirectionSetting(int windDirectionSetting) {
         this.windDirectionSetting = windDirectionSetting;
     }

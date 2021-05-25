@@ -9,13 +9,12 @@ import com.serotonin.modbus4j.locator.BaseLocator;
 import com.serotonin.modbus4j.msg.WriteRegisterResponse;
 import modbus.ModbusMasterHolder;
 
-import java.util.List;
-
 /**
  * vrv 空调实现
  * 空调内机
  */
 public class VrvDevice implements DeviceSetter, DeviceGetter {
+    private final Integer slaveID;
     /**
      * 空调内机id
      */
@@ -51,17 +50,18 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
         return id;
     }
 
-    public VrvDevice(Integer id, Integer groupId) {
+    public VrvDevice(Integer slaveID, Integer id, Integer groupId) {
+        this.slaveID = slaveID;
         this.id = id;
         this.groupId = groupId;
-        startReadAddress = (32 * groupId + id) * 6;
-        startSettingAddress = (32 * groupId + id) * 4 + 4000;
+        startReadAddress = (32 * groupId + id) * 6 ;
+        startSettingAddress = (32 * groupId + id) * 4 + 4000 ;
     }
 
     @Override
     public Boolean getRunState() {
         try {
-            return ModbusMasterHolder.getInstance.readHoldingRegistersRequest(1, startReadAddress, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0] == Device.STATE_ON;
+            return ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress,DataType.ONE_BYTE_INT_UNSIGNED_LOWER).getShortData()[0] == Device.STATE_ON;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,7 +71,7 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     @Override
     public Integer getTempSetting() {
         try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(1, startReadAddress + 1, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
+            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER).getShortData()[0];
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,7 +82,7 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     @Override
     public Integer getModeSetting() {
         try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(1, startReadAddress + 2, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
+            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 2, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,7 +93,7 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     @Override
     public Integer getWindDirectionSetting() {
         try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(1, startReadAddress + 3, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
+            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 3, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -105,7 +105,7 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     @Override
     public Integer getRoomReturnAirTempe() throws ModbusTransportException {
         try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(1, startReadAddress + 4, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
+            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 4, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,7 +116,7 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     @Override
     public Integer getErr() {
         try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(1, startReadAddress + 5, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
+            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 5, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
         } catch (Exception e) {
             return 0;
         }
@@ -136,12 +136,12 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     public Device batchWapper() {
 
         BatchRead<Integer> batchRead = new BatchRead<>();
-        batchRead.addLocator(0, BaseLocator.holdingRegister(1, startReadAddress, DataType.EIGHT_BYTE_INT_SIGNED));
-        batchRead.addLocator(1, BaseLocator.holdingRegister(1, startReadAddress + 1, DataType.EIGHT_BYTE_INT_SIGNED));
-        batchRead.addLocator(2, BaseLocator.holdingRegister(1, startReadAddress + 2, DataType.EIGHT_BYTE_INT_SIGNED));
-        batchRead.addLocator(3, BaseLocator.holdingRegister(1, startReadAddress + 3, DataType.EIGHT_BYTE_INT_SIGNED));
-        batchRead.addLocator(4, BaseLocator.holdingRegister(1, startReadAddress + 4, DataType.EIGHT_BYTE_INT_SIGNED));
-        batchRead.addLocator(5, BaseLocator.holdingRegister(1, startReadAddress + 4, DataType.EIGHT_BYTE_INT_SIGNED));
+        batchRead.addLocator(0, BaseLocator.holdingRegister(2, startReadAddress, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+        batchRead.addLocator(1, BaseLocator.holdingRegister(2, startReadAddress + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+        batchRead.addLocator(2, BaseLocator.holdingRegister(2, startReadAddress + 2, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+        batchRead.addLocator(3, BaseLocator.holdingRegister(2, startReadAddress + 3, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+        batchRead.addLocator(4, BaseLocator.holdingRegister(2, startReadAddress + 4, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+        batchRead.addLocator(5, BaseLocator.holdingRegister(2, startReadAddress + 4, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
         Device device = new Device();
         try {
             BatchResults<Integer> results = ModbusMasterHolder.getInstance.getModbusMaster().send(batchRead);
@@ -161,22 +161,22 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
 
     @Override
     public WriteRegisterResponse setRunState(Short state) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(1, startSettingAddress, state);
+        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress, state);
     }
 
     @Override
     public WriteRegisterResponse setTempSetting(Short temp) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(1, startSettingAddress + 1, temp);
+         return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress + 1, temp);
     }
 
     @Override
     public WriteRegisterResponse setModeSetting(Short mode) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(1, startSettingAddress + 2, mode);
+        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress + 2, mode);
     }
 
     @Override
     public WriteRegisterResponse setWindDirectionSetting(Short wds) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(1, startSettingAddress + 3, wds);
+        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress + 3, wds);
     }
 
 

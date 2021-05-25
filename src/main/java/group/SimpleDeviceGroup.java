@@ -26,12 +26,12 @@ import java.util.List;
  * 4.支持组嵌套  逻辑集群 (很多层)----》--------集群 --》设备
  */
 public class SimpleDeviceGroup implements DeviceGroup {
+    private final int salveID;
     private final Integer id;
     private final ArrayList<VrvDevice> devices = new ArrayList<>();
 
-
     public SimpleDeviceGroup addDevice() {
-        devices.add(new VrvDevice(devices.size(), id));
+        devices.add(new VrvDevice(salveID, devices.size()+1, id));
         return this;
     }
 
@@ -43,13 +43,15 @@ public class SimpleDeviceGroup implements DeviceGroup {
         return devices;
     }
 
-    public SimpleDeviceGroup(Integer id) {
+    public SimpleDeviceGroup(int salveID, Integer id) {
+        this.salveID = salveID;
         this.id = id;
     }
 
-    public SimpleDeviceGroup(Integer id, Integer size) {
+    public SimpleDeviceGroup(Integer id, Integer size, int salveID) {
         this.id = id;
-        for (int i = 0; i < size; i++) {
+        this.salveID = salveID;
+        for (int i = 1; i <= size; i++) {
             this.addDevice();
         }
     }
