@@ -6,6 +6,7 @@ package entiry;
  * 读写分离
  */
 public class Device {
+    private int id;
     /**
      * 空调关机
      */
@@ -22,7 +23,7 @@ public class Device {
     public static short MOD_HOT = 0B1000;
 
 
-    private Boolean runState;
+    private Integer runState;
 
     private int tempSetting;
 
@@ -30,6 +31,16 @@ public class Device {
 
     private int windDirectionSetting;
     private int err;
+
+    private int roomTemp;
+
+    public int getRoomTemp() {
+        return roomTemp;
+    }
+
+    public void setRoomTemp(int roomTemp) {
+        this.roomTemp = roomTemp;
+    }
 
     public int getErr() {
         return err;
@@ -39,11 +50,11 @@ public class Device {
         this.err = err;
     }
 
-    public Boolean getRunState() {
+    public Integer getRunState() {
         return runState;
     }
 
-    public void setRunState(Boolean runState) {
+    public void setRunState(Integer runState) {
         this.runState = runState;
     }
 
@@ -70,12 +81,22 @@ public class Device {
     @Override
     public String toString() {
         return "Device{" +
-                "runState=" + runState +
+                "id=" + id +
+                ", runState=" + runState +
                 ", tempSetting=" + tempSetting +
                 ", modeSetting=" + modeSetting +
                 ", windDirectionSetting=" + windDirectionSetting +
                 ", err=" + err +
+                ", roomTemp=" + roomTemp +
                 '}';
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setWindDirectionSetting(int windDirectionSetting) {

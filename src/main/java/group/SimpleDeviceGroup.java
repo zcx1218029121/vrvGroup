@@ -129,18 +129,18 @@ public class SimpleDeviceGroup implements DeviceGroup {
         ArrayList<Device> d = new ArrayList<>();
         BatchRead<Integer> batchRead = new BatchRead<>();
         devices.forEach(vrvDevice -> {
-            batchRead.addLocator(vrvDevice.getId() * 6, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress(), DataType.EIGHT_BYTE_INT_SIGNED));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 1, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 1, DataType.EIGHT_BYTE_INT_SIGNED));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 2, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 2, DataType.EIGHT_BYTE_INT_SIGNED));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 3, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 3, DataType.EIGHT_BYTE_INT_SIGNED));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 4, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 4, DataType.EIGHT_BYTE_INT_SIGNED));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 5, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 5, DataType.EIGHT_BYTE_INT_SIGNED));
+            batchRead.addLocator(vrvDevice.getId() * 6, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress(), DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 1, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 2, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 2, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 3, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 3, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 4, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 4, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 5, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 5, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
         });
 
         BatchResults<Integer> results = ModbusMasterHolder.getInstance.getModbusMaster().send(batchRead);
         devices.forEach(vrvDevice -> {
             Device device = new Device();
-            device.setRunState(results.getIntValue(vrvDevice.getId() * 6) == Device.STATE_ON);
+            device.setRunState(results.getIntValue(vrvDevice.getId() * 6));
             device.setTempSetting(results.getIntValue(vrvDevice.getId() * 6 + 1));
             device.setModeSetting(results.getIntValue(vrvDevice.getId() * 6 + 2));
             device.setWindDirectionSetting(results.getIntValue(vrvDevice.getId() * 6 + 3));
