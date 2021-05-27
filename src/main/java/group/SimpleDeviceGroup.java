@@ -6,7 +6,6 @@ import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.exception.ErrorResponseException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.locator.BaseLocator;
-import com.serotonin.modbus4j.msg.WriteRegisterResponse;
 import entiry.Device;
 import entiry.DeviceGetter;
 import entiry.DeviceSetter;
@@ -31,7 +30,7 @@ public class SimpleDeviceGroup implements DeviceGroup {
     private final ArrayList<VrvDevice> devices = new ArrayList<>();
 
     public SimpleDeviceGroup addDevice() {
-        devices.add(new VrvDevice(salveID, devices.size()+1, id));
+        devices.add(new VrvDevice(salveID, devices.size() + 1, id));
         return this;
     }
 
@@ -57,54 +56,29 @@ public class SimpleDeviceGroup implements DeviceGroup {
     }
 
     @Override
-    public WriteRegisterResponse setRunState(Short state) {
-        devices.forEach(setters -> {
-            try {
-                setters.setRunState(state);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        return null;
+    public boolean setRunState(Short state) {
+        for (VrvDevice setters : devices) {
+            setters.setRunState(state);
+        }
+        return true;
     }
 
     @Override
-    public WriteRegisterResponse setTempSetting(Short temp) {
-        devices.forEach(setters -> {
-            try {
-                setters.setTempSetting(temp);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return null;
+    public boolean setTempSetting(Short temp) {
+        devices.forEach(setters -> setters.setTempSetting(temp));
+        return true;
     }
 
     @Override
-    public WriteRegisterResponse setModeSetting(Short mode) {
-
-        devices.forEach(setters -> {
-            try {
-                setters.setModeSetting(mode);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return null;
+    public boolean setModeSetting(Short mode) {
+        devices.forEach(setter -> setter.setModeSetting(mode));
+        return true;
     }
 
     @Override
-    public WriteRegisterResponse setWindDirectionSetting(Short wds) {
-
-        devices.forEach(setters -> {
-            try {
-                setters.setWindDirectionSetting(wds);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return null;
+    public boolean setWindDirectionSetting(Short wds) {
+        devices.forEach(setters -> setters.setWindDirectionSetting(wds));
+        return true;
     }
 
     @Override
@@ -117,15 +91,27 @@ public class SimpleDeviceGroup implements DeviceGroup {
         return devices.get(id);
     }
 
+
     @Override
-    public List<Device> getDeviceVo() {
+    public List<Device> bachReadDevices(int type) {
+        switch (type) {
+            case 0:
+                return bachReadDevicesOnesAll();
+            case 1:
+                return bachReadDevicesOneByOne();
+            default:
+                return bachReadDevicesAtom();
+        }
+
+    }
+
+    private List<Device> bachReadDevicesOneByOne() {
         ArrayList<Device> d = new ArrayList<>();
         devices.forEach(vrvDevice -> d.add(vrvDevice.batchWapper()));
         return d;
     }
 
-
-    public List<Device> getDeviceVo2() throws ModbusTransportException, ErrorResponseException {
+    private List<Device> bachReadDevicesOnesAll() {
         ArrayList<Device> d = new ArrayList<>();
         BatchRead<Integer> batchRead = new BatchRead<>();
         devices.forEach(vrvDevice -> {
@@ -136,18 +122,30 @@ public class SimpleDeviceGroup implements DeviceGroup {
             batchRead.addLocator(vrvDevice.getId() * 6 + 4, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 4, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
             batchRead.addLocator(vrvDevice.getId() * 6 + 5, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 5, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
         });
+        try {
+            BatchResults<Integer> results = ModbusMasterHolder.getInstance.getModbusMaster().send(batchRead);
+            devices.forEach(vrvDevice -> {
+                Device device = new Device();
+                device.setRunState(results.getIntValue(vrvDevice.getId() * 6));
+                device.setTempSetting(results.getIntValue(vrvDevice.getId() * 6 + 1));
+                device.setModeSetting(results.getIntValue(vrvDevice.getId() * 6 + 2));
+                device.setWindDirectionSetting(results.getIntValue(vrvDevice.getId() * 6 + 3));
+                device.setId(vrvDevice.getId());
+                device.setRoomTemp(results.getIntValue(vrvDevice.getId() * 6 + 4));
+                device.setErr(results.getIntValue(vrvDevice.getId() * 6 + 5));
+                d.add(device);
 
-        BatchResults<Integer> results = ModbusMasterHolder.getInstance.getModbusMaster().send(batchRead);
-        devices.forEach(vrvDevice -> {
-            Device device = new Device();
-            device.setRunState(results.getIntValue(vrvDevice.getId() * 6));
-            device.setTempSetting(results.getIntValue(vrvDevice.getId() * 6 + 1));
-            device.setModeSetting(results.getIntValue(vrvDevice.getId() * 6 + 2));
-            device.setWindDirectionSetting(results.getIntValue(vrvDevice.getId() * 6 + 3));
-            device.setErr(results.getIntValue(vrvDevice.getId() * 6 + 5));
+            });
+        } catch (ModbusTransportException | ErrorResponseException e) {
+            e.printStackTrace();
+        }
+        return d;
+    }
 
-        });
 
+    private List<Device> bachReadDevicesAtom() {
+        ArrayList<Device> d = new ArrayList<>();
+        devices.forEach(vrvDevice -> d.add(vrvDevice.wapper()));
         return d;
     }
 

@@ -60,80 +60,45 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
 
     @Override
     public Boolean getRunState() {
-        try {
-            return ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress, DataType.ONE_BYTE_INT_UNSIGNED_LOWER).getShortData()[0] == Device.STATE_ON;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+        return getIntValue(startReadAddress) == Device.STATE_ON;
     }
 
     public Integer getRunStateInt() {
-        try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress, DataType.ONE_BYTE_INT_UNSIGNED_LOWER).getShortData()[0];
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
+        return getIntValue(startReadAddress);
     }
 
     @Override
     public Integer getTempSetting() {
-        try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER).getShortData()[0];
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-
+        return getIntValue(startReadAddress + 1);
     }
 
     @Override
     public Integer getModeSetting() {
-        try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 2, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return -1;
+        return getIntValue(startReadAddress + 2);
 
     }
 
     @Override
     public Integer getWindDirectionSetting() {
-        try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 3, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return getIntValue(startReadAddress + 3);
 
-
-        return 0;
     }
 
     @Override
-    public Integer getRoomReturnAirTempe() throws ModbusTransportException {
-        try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 4, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
+    public Integer getRoomReturnAirTempe() {
+        return getIntValue(startReadAddress + 4);
     }
 
     @Override
     public Integer getErr() {
-        try {
-            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, startReadAddress + 5, DataType.EIGHT_BYTE_INT_SIGNED).getShortData()[0];
-        } catch (Exception e) {
-            return 0;
-        }
+        return getIntValue(startReadAddress + 5);
+
     }
 
     @Override
     public Device wapper() {
         Device device = new Device();
+        device.setId(id);
         device.setModeSetting(getModeSetting());
         device.setRunState(getRunStateInt());
         device.setWindDirectionSetting(getWindDirectionSetting());
@@ -143,7 +108,6 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
     }
 
     public Device batchWapper() {
-
         BatchRead<Integer> batchRead = new BatchRead<>();
         batchRead.addLocator(0, BaseLocator.holdingRegister(slaveID, startReadAddress, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
         batchRead.addLocator(1, BaseLocator.holdingRegister(slaveID, startReadAddress + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
@@ -162,32 +126,57 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
             device.setRoomTemp(results.getIntValue(4));
             device.setErr(results.getIntValue(5));
 
-        } catch (ModbusTransportException e) {
-            e.printStackTrace();
-        } catch (ErrorResponseException e) {
+        } catch (ModbusTransportException | ErrorResponseException e) {
             e.printStackTrace();
         }
         return device;
     }
 
     @Override
-    public WriteRegisterResponse setRunState(Short state) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress, state);
+    public boolean setRunState(Short state) {
+        return setValue(startReadAddress, state);
     }
 
     @Override
-    public WriteRegisterResponse setTempSetting(Short temp) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress + 1, temp);
+    public boolean setTempSetting(Short temp) {
+        return setValue(startSettingAddress + 1, temp);
     }
 
     @Override
-    public WriteRegisterResponse setModeSetting(Short mode) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress + 2, mode);
+    public boolean setModeSetting(Short mode) {
+        return setValue(startSettingAddress + 2, mode);
     }
 
     @Override
-    public WriteRegisterResponse setWindDirectionSetting(Short wds) throws ModbusTransportException {
-        return ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, startSettingAddress + 3, wds);
+    public boolean setWindDirectionSetting(Short wds) {
+        return setValue(startSettingAddress + 3, wds);
+    }
+
+    /**
+     * 写方法抽象 如果写超时 自动翻倍超时时间
+     *
+     * @param value
+     * @return
+     */
+    private boolean setValue(int address, Short value) {
+        try {
+            return !ModbusMasterHolder.getInstance.writeRegisterRequest(slaveID, address, value).isException();
+        } catch (ModbusTransportException e) {
+            // 如果是超时异常就 翻倍超时时间
+            ModbusMasterHolder.getInstance.autoCapacity();
+        }
+        return false;
+    }
+
+    private Integer getIntValue(int address) {
+        try {
+            return (int) ModbusMasterHolder.getInstance.readHoldingRegistersRequest(slaveID, address, 1).getShortData()[0];
+        } catch (Exception e) {
+            // 如果是超时异常就 翻倍超时时间
+            ModbusMasterHolder.getInstance.autoCapacity();
+            e.printStackTrace();
+        }
+        return 0;
     }
 
 

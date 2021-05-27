@@ -1,6 +1,5 @@
 package entiry;
 
-import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.msg.WriteRegisterResponse;
 
 
@@ -15,22 +14,22 @@ public interface DeviceSetter {
      *
      * @return 是否开启
      */
-    WriteRegisterResponse setRunState(Short state) throws ModbusTransportException;
+    boolean setRunState(Short state) ;
 
     /**
      * 设置温度设定值
      *
      * @return
      */
-    WriteRegisterResponse setTempSetting(Short temp) throws ModbusTransportException;
+    boolean setTempSetting(Short temp) ;
 
     /**
      * 模式设定
      *
      * @return 模式
      */
-    WriteRegisterResponse setModeSetting(Short mode) throws ModbusTransportException;
+    boolean setModeSetting(Short mode) ;
 
-    WriteRegisterResponse setWindDirectionSetting(Short wds) throws ModbusTransportException;
+    boolean setWindDirectionSetting(Short wds) ;
 
 }

@@ -11,14 +11,18 @@ import com.serotonin.modbus4j.msg.WriteRegisterResponse;
 import entiry.Serial;
 
 public enum ModbusMasterHolder {
+
+
     getInstance();
+
+    private Integer timeOut = 5000;
 
     ModbusMasterHolder() {
         Serial serial = new Serial();
         modbusMaster = new ModbusFactory().createRtuMaster(new SerialPortParam());
         try {
             modbusMaster.init();
-            modbusMaster.setTimeout(5000);
+            modbusMaster.setTimeout(50000);
         } catch (ModbusInitException e) {
             e.printStackTrace();
         }
@@ -38,5 +42,13 @@ public enum ModbusMasterHolder {
     public WriteRegisterResponse writeRegisterRequest(int slaveId, int startOffset, int writeValue) throws ModbusTransportException {
         WriteRegisterRequest writeRegisterRequest = new WriteRegisterRequest(slaveId, startOffset, writeValue);
         return (WriteRegisterResponse) modbusMaster.send(writeRegisterRequest);
+    }
+
+    /**
+     * 一旦发生超时异常自动翻倍
+     */
+    public void autoCapacity() {
+        timeOut = timeOut * 2;
+        modbusMaster.setTimeout(timeOut);
     }
 }
