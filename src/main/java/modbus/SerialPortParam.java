@@ -35,8 +35,10 @@ public class SerialPortParam implements SerialPortWrapper {
     public SerialPortParam() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB1");
         serialPort.setParity(SerialPort.EVEN_PARITY);
-        System.err.println(serialPort);
+
         serialPort.openPort();
+
+
     }
 
     @Override

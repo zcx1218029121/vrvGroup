@@ -10,6 +10,8 @@ public class Main {
             System.out.println(integer);
             simpleDeviceGroup.bachReadDevices(0).forEach(System.out::println);
         });
+        modelRegistry.getSimpleDeviceGroupMap().get(6).getDeviceSetter(2).setWindDirectionSetting((short)4);
+        modelRegistry.getSimpleDeviceGroupMap().get(6).getDeviceSetter(11).setWindDirectionSetting((short)4);
     }
 
 

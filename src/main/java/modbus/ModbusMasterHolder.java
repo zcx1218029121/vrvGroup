@@ -22,7 +22,6 @@ public enum ModbusMasterHolder {
         modbusMaster = new ModbusFactory().createRtuMaster(new SerialPortParam());
         try {
             modbusMaster.init();
-            modbusMaster.setTimeout(50000);
         } catch (ModbusInitException e) {
             e.printStackTrace();
         }
