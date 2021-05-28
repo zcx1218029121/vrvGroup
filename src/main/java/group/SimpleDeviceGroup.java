@@ -27,10 +27,10 @@ import java.util.List;
 public class SimpleDeviceGroup implements DeviceGroup {
     private final int salveID;
     private final Integer id;
-    private final ArrayList<VrvDevice> devices = new ArrayList<>();
+    private final List<VrvDevice> devices = new ArrayList<>();
 
     public SimpleDeviceGroup addDevice() {
-        devices.add(new VrvDevice(salveID, devices.size() + 1, id));
+        devices.add(new VrvDevice(salveID, devices.size(), id));
         return this;
     }
 
@@ -38,13 +38,33 @@ public class SimpleDeviceGroup implements DeviceGroup {
         return id;
     }
 
-    public ArrayList<VrvDevice> getDevices() {
+    public List<VrvDevice> getDevices() {
         return devices;
     }
 
     public SimpleDeviceGroup(int salveID, Integer id) {
         this.salveID = salveID;
         this.id = id;
+        int low = 0;
+        int height = 31;
+        int mind = (low + height) / 2;
+        while (low <= height) {
+            mind = (low + height) / 2;
+            try {
+                short s = ModbusMasterHolder.getInstance.readHoldingRegistersRequest(salveID, (32 + mind) * 6 + 2, 1).getShortData()[0];
+                if (s == 0) {
+                    height = mind - 1;
+                } else {
+                    low = mind + 1;
+                }
+            } catch (ModbusTransportException e) {
+                e.printStackTrace();
+            }
+        }
+        for (int i = 0; i <= mind; i++) {
+            this.addDevice();
+        }
+
     }
 
     public SimpleDeviceGroup(Integer id, Integer size, int salveID) {
@@ -91,7 +111,15 @@ public class SimpleDeviceGroup implements DeviceGroup {
         return devices.get(id);
     }
 
-
+    /**
+     * 批量读取空调信息
+     *
+     * @param type 读取方式
+     *             0 一口气全读 70台空调1.5秒
+     *             1 一台空调一台空调 读70台空调大概8秒
+     *             2 一个属性一个属性的读 读70台空调大概20秒
+     * @return 批量读
+     */
     @Override
     public List<Device> bachReadDevices(int type) {
         switch (type) {
@@ -105,6 +133,7 @@ public class SimpleDeviceGroup implements DeviceGroup {
 
     }
 
+
     private List<Device> bachReadDevicesOneByOne() {
         ArrayList<Device> d = new ArrayList<>();
         devices.forEach(vrvDevice -> d.add(vrvDevice.batchWapper()));
@@ -115,17 +144,18 @@ public class SimpleDeviceGroup implements DeviceGroup {
         ArrayList<Device> d = new ArrayList<>();
         BatchRead<Integer> batchRead = new BatchRead<>();
         devices.forEach(vrvDevice -> {
-            batchRead.addLocator(vrvDevice.getId() * 6, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress(), DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 1, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 2, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 2, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 3, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 3, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 4, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 4, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
-            batchRead.addLocator(vrvDevice.getId() * 6 + 5, BaseLocator.holdingRegister(1, vrvDevice.getStartReadAddress() + 5, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6, BaseLocator.holdingRegister(salveID, vrvDevice.getStartReadAddress(), DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 1, BaseLocator.holdingRegister(salveID, vrvDevice.getStartReadAddress() + 1, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 2, BaseLocator.holdingRegister(salveID, vrvDevice.getStartReadAddress() + 2, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 3, BaseLocator.holdingRegister(salveID, vrvDevice.getStartReadAddress() + 3, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 4, BaseLocator.holdingRegister(salveID, vrvDevice.getStartReadAddress() + 4, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
+            batchRead.addLocator(vrvDevice.getId() * 6 + 5, BaseLocator.holdingRegister(salveID, vrvDevice.getStartReadAddress() + 5, DataType.ONE_BYTE_INT_UNSIGNED_LOWER));
         });
         try {
             BatchResults<Integer> results = ModbusMasterHolder.getInstance.getModbusMaster().send(batchRead);
             devices.forEach(vrvDevice -> {
                 Device device = new Device();
+                device.setSlaveId(vrvDevice.getSlaveID());
                 device.setRunState(results.getIntValue(vrvDevice.getId() * 6));
                 device.setTempSetting(results.getIntValue(vrvDevice.getId() * 6 + 1));
                 device.setModeSetting(results.getIntValue(vrvDevice.getId() * 6 + 2));
@@ -133,7 +163,10 @@ public class SimpleDeviceGroup implements DeviceGroup {
                 device.setId(vrvDevice.getId());
                 device.setRoomTemp(results.getIntValue(vrvDevice.getId() * 6 + 4));
                 device.setErr(results.getIntValue(vrvDevice.getId() * 6 + 5));
-                d.add(device);
+
+                if (device.getTempSetting() > 0) {
+                    d.add(device);
+                }
 
             });
         } catch (ModbusTransportException | ErrorResponseException e) {

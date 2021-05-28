@@ -6,7 +6,6 @@ import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.exception.ErrorResponseException;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.locator.BaseLocator;
-import com.serotonin.modbus4j.msg.WriteRegisterResponse;
 import modbus.ModbusMasterHolder;
 
 /**
@@ -33,6 +32,9 @@ public class VrvDevice implements DeviceSetter, DeviceGetter {
      */
     private final Integer startSettingAddress;
 
+    public Integer getSlaveID() {
+        return slaveID;
+    }
 
     public Integer getStartReadAddress() {
         return startReadAddress;

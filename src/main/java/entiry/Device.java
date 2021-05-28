@@ -26,6 +26,11 @@ public class Device {
     private Integer runState;
 
     private int tempSetting;
+    private int slaveId;
+
+    public void setSlaveId(int slaveId) {
+        this.slaveId = slaveId;
+    }
 
     private int modeSetting;
 
@@ -58,6 +63,14 @@ public class Device {
         this.runState = runState;
     }
 
+    public int getSlaveId() {
+        return slaveId;
+    }
+
+    public static void setModAirSupply(short modAirSupply) {
+        MOD_AIR_SUPPLY = modAirSupply;
+    }
+
     public int getTempSetting() {
         return tempSetting;
     }
@@ -84,6 +97,7 @@ public class Device {
                 "id=" + id +
                 ", runState=" + runState +
                 ", tempSetting=" + tempSetting +
+                ", slaveId=" + slaveId +
                 ", modeSetting=" + modeSetting +
                 ", windDirectionSetting=" + windDirectionSetting +
                 ", err=" + err +

@@ -15,7 +15,7 @@ public enum ModbusMasterHolder {
 
     getInstance();
 
-    private Integer timeOut = 5000;
+    private Integer timeOut = 500;
 
     ModbusMasterHolder() {
         Serial serial = new Serial();
